@@ -1,0 +1,25 @@
+/* src/styles/Navbar.css */
+.navbar {
+    background-color: #052453;
+    color: #c2a23d;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed; /* Fix the navbar to the top */
+    top: 0;
+    left: 0; /* Align to the right of the sidebar */
+    width: 100%; /* Subtract the width of the sidebar */
+    z-index: 1000; /* Make sure the navbar stays above other content */
+    }
+    
+    .navbar-links a {
+    margin-left: 15px;
+    color: #c2a23d;
+    margin-right: 50px;
+    }
+    
+    .mainHeading {
+    color: #c2a23d;
+    }
+    
