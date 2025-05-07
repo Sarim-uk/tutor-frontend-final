@@ -5,6 +5,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@fortawesome/fontawesome-free": "^6.5.1",
     "@mui/icons-material": "^5.16.14",
     "@mui/material": "^5.16.14",
     "@reduxjs/toolkit": "^2.5.1",
@@ -16,9 +17,11 @@
     "date-fns": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-markdown": "^9.0.1",
     "react-redux": "^9.2.0",
     "react-router-dom": "^6.22.1",
     "react-scripts": "5.0.1",
+    "react-toastify": "^10.0.4",
     "web-vitals": "^2.1.4",
     "zego-express-engine-webrtc": "^3.9.0"
   },

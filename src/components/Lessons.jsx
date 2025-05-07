@@ -36,8 +36,7 @@ import { format } from 'date-fns';
 import { fadeIn, slideIn, pulse } from '../utils/animations';
 import { useNavigate } from 'react-router-dom';
 import { fetchSessionNotes, fetchSessionAssignments, fetchTutorSessions } from '../services/api';
-import VideoChat from './VideoChat';
-import VideoCallButton from './VideoCallButton';
+import TutoringSession from './TutoringSession';
 
 function Lessons() {
   const [lessons, setLessons] = useState([]);
@@ -113,8 +112,8 @@ function Lessons() {
 
   const handleJoinMeeting = (e, lesson) => {
     e.stopPropagation();
-    // Navigate to the URL
-    window.open(lesson.tutor_ids?.meeting_link || `https://meet.jit.si/${lesson.id}`, '_blank');
+    setSelectedLesson(lesson);
+    setVideoChatOpen(true);
   };
 
   const handleCloseVideoChat = () => {
@@ -206,20 +205,18 @@ function Lessons() {
                       <Typography variant="body1">
                         Use our integrated video conference system for this session.
                       </Typography>
-                      <VideoCallButton 
-                        lessonId={lesson.id} 
-                        disabled={!isSessionActive(lesson)}
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<VideoIcon />}
                         onClick={(e) => {
-                          if (!isSessionActive(lesson)) {
-                            e.preventDefault();
-                            alert('This session is not currently active. You can join 15 minutes before the scheduled time until 1 hour after the start time.');
-                          }
+                          e.stopPropagation();
+                          handleJoinMeeting(e, lesson);
                         }}
-                        buttonProps={{
-                          size: "small",
-                          sx: { mr: 1 }
-                        }}
-                      />
+                        fullWidth
+                      >
+                        Join Session
+                      </Button>
                     </Box>
                   </CardContent>
                 </Card>
@@ -629,7 +626,44 @@ function Lessons() {
           })}
       </Grid>
 
-      {selectedLesson && showNotes && (
+      {/* Video Chat Dialog */}
+      {selectedLesson && videoChatOpen && (
+        <Dialog
+          open={videoChatOpen}
+          onClose={handleCloseVideoChat}
+          maxWidth="xl"
+          fullWidth
+          PaperProps={{
+            sx: {
+              height: '90vh',
+              maxHeight: '90vh',
+              margin: 0,
+              borderRadius: 0,
+            }
+          }}
+        >
+          <DialogTitle sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            bgcolor: 'primary.main',
+            color: 'white'
+          }}>
+            <Typography variant="h6">
+              Tutoring Session with {selectedLesson?.student ? `${selectedLesson.student.first_name} ${selectedLesson.student.last_name}` : 'Student'}
+            </Typography>
+            <IconButton onClick={handleCloseVideoChat} sx={{ color: 'white' }}>
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ p: 0, height: 'calc(100% - 64px)' }}>
+            <TutoringSession />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Notes Dialog */}
+      {showNotes && selectedLesson && (
         <NotesDialog 
           lesson={selectedLesson} 
           onClose={() => {
@@ -639,7 +673,8 @@ function Lessons() {
         />
       )}
       
-      {selectedLesson && showAssignments && (
+      {/* Assignments Dialog */}
+      {showAssignments && selectedLesson && (
         <AssignmentsDialog 
           lesson={selectedLesson} 
           onClose={() => {
@@ -647,47 +682,6 @@ function Lessons() {
             setSelectedLesson(null);
           }} 
         />
-      )}
-
-      {/* Video Chat Dialog */}
-      {selectedLesson && videoChatOpen && (
-        <Dialog
-          open={videoChatOpen}
-          onClose={handleCloseVideoChat}
-          maxWidth="lg"
-          fullWidth
-          PaperProps={{
-            sx: {
-              height: '80vh',
-              maxHeight: '900px',
-            }
-          }}
-        >
-          <Box sx={{ position: 'relative', height: '100%' }}>
-            <IconButton
-              onClick={handleCloseVideoChat}
-              sx={{
-                position: 'absolute',
-                right: 8,
-                top: 8,
-                color: 'white',
-                bgcolor: 'rgba(0, 0, 0, 0.5)',
-                zIndex: 10,
-                '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.7)',
-                }
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-            
-            <VideoChat
-              sessionId={selectedLesson.id}
-              participant={selectedLesson.student}
-              onClose={handleCloseVideoChat}
-            />
-          </Box>
-        </Dialog>
       )}
     </Box>
   );
