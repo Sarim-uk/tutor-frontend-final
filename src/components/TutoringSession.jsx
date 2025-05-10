@@ -19,13 +19,68 @@ export function getUrlParams(url = window.location.href) {
 }
 
 export default function TutoringSession() {
-  // Get user from Redux, but have fallbacks for everything
+  // Get user and auth data from Redux
   const user = useSelector((state) => state.auth.user);
   const reduxUserId = useSelector((state) => state.auth.user_id);
   
   // Get user data from localStorage as fallback
   const [localUserData, setLocalUserData] = useState(null);
+  const [roomID, setRoomID] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const fetchAttempted = useRef(false);
   
+  useEffect(() => {
+    // Prevent duplicate fetches
+    if (fetchAttempted.current) return;
+    fetchAttempted.current = true;
+
+    // Fetch room ID from backend
+    const fetchRoomID = async () => {
+      setIsLoading(true);
+      try {
+        const token = localStorage.getItem('access_token');
+        
+        if (!token) {
+          console.error('No authentication token found');
+          throw new Error('No authentication token');
+        }
+
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+
+        const response = await axios.get('http://localhost:8000/tutors/me/', { 
+          headers,
+          withCredentials: false // Disable credentials since we're using JWT
+        });
+
+        if (response.data && response.data.room_id) {
+          console.log('Setting room ID from backend:', response.data.room_id);
+          setRoomID(response.data.room_id.toString()); // Ensure room ID is a string
+        } else {
+          throw new Error('No room ID in response');
+        }
+      } catch (error) {
+        console.error('Error fetching room ID:', error.response?.data || error.message);
+        // If no valid room ID from backend, use URL params or generate one
+        const urlParams = getUrlParams(window.location.href);
+        const roomIdFromUrl = urlParams['roomID'];
+        if (roomIdFromUrl && roomIdFromUrl !== 'null') {
+          setRoomID(roomIdFromUrl);
+        } else {
+          const newRoomId = getRandomID();
+          console.log('Generated new room ID after error:', newRoomId);
+          setRoomID(newRoomId);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRoomID();
+  }, []); // Empty dependency array since we're using ref to prevent duplicates
+
   useEffect(() => {
     try {
       const localUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -36,7 +91,6 @@ export default function TutoringSession() {
   }, []);
   
   // Always ensure we have valid values for ZegoCloud
-  const roomID = getUrlParams(window.location.href)['roomID'] || getRandomID();
   const userID = reduxUserId || (localUserData?.id) || localStorage.getItem('user_id') || getRandomID();
   
   // Format name as first_name + last_name to match dashboard
@@ -370,6 +424,11 @@ export default function TutoringSession() {
       }
     }, 'image/jpeg');
   };
+
+  // Don't proceed with room creation until we have a valid roomID
+  if (isLoading || !roomID) {
+    return <div>Loading session...</div>;
+  }
 
   return (
     <div className="container-fluid" style={{ height: '100%', width: '100%', padding: 0, overflow: 'hidden' }}>

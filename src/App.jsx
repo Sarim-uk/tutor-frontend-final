@@ -4,13 +4,13 @@ import { useDispatch } from 'react-redux';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Students from './components/Students';
 import Profile from './components/Profile';
-import VideoRoom from './pages/VideoRoom';
+import TutoringSession from './components/TutoringSession';
 import { login as reduxLogin } from './redux/authSlice';
 import { getSessionUser } from './services/api';
 import AssignmentForm from './components/assignment/AssignmentForm';
@@ -42,7 +42,14 @@ function App() {
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             
-            {/* Protected routes */}
+            {/* Video Room route - using TutoringSession component */}
+            <Route path="/room" element={
+              <ProtectedRoute>
+                <TutoringSession />
+              </ProtectedRoute>
+            } />
+            
+            {/* Other Protected routes */}
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />
@@ -58,13 +65,6 @@ function App() {
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />
-              </ProtectedRoute>
-            } />
-            
-            {/* Video Room route */}
-            <Route path="/room/:roomId" element={
-              <ProtectedRoute>
-                <VideoRoom />
               </ProtectedRoute>
             } />
             
