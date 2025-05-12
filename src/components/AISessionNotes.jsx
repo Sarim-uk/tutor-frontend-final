@@ -24,6 +24,8 @@ const AISessionNotes = ({ sessionId }) => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedSubject, setEditedSubject] = useState('');
   const [editedAINotes, setEditedAINotes] = useState('');
   const [editedTutorNotes, setEditedTutorNotes] = useState('');
   const [activeTab, setActiveTab] = useState(0);
@@ -45,6 +47,8 @@ const AISessionNotes = ({ sessionId }) => {
       const aiNotes = contentParts[0]?.replace('AI Generated Notes:', '').trim() || '';
       const tutorNotes = contentParts[1]?.replace('Tutor Notes:', '').trim() || '';
       
+      setEditedTitle(response.data.title || '');
+      setEditedSubject(response.data.subject || '');
       setEditedAINotes(aiNotes);
       setEditedTutorNotes(tutorNotes);
       setLoading(false);
@@ -61,6 +65,8 @@ const AISessionNotes = ({ sessionId }) => {
       const formattedContent = `AI Generated Notes:\n\n${editedAINotes}\n\n---\n\nTutor Notes:\n\n${editedTutorNotes}`;
       
       const response = await axios.post(`http://localhost:8000/notes/session/${sessionId}/manage/`, {
+        title: editedTitle,
+        subject: editedSubject,
         content: formattedContent,
         is_approved: notes.is_approved,
         tutor_notes: editedTutorNotes
@@ -77,6 +83,8 @@ const AISessionNotes = ({ sessionId }) => {
       const tutorNotes = contentParts[1]?.replace('Tutor Notes:', '').trim() || '';
       
       // Update the edited states with the response data
+      setEditedTitle(response.data.title || '');
+      setEditedSubject(response.data.subject || '');
       setEditedAINotes(aiNotes);
       setEditedTutorNotes(tutorNotes);
       
@@ -94,6 +102,8 @@ const AISessionNotes = ({ sessionId }) => {
       const formattedContent = `AI Generated Notes:\n\n${editedAINotes}\n\n---\n\nTutor Notes:\n\n${editedTutorNotes}`;
       
       const response = await axios.post(`http://localhost:8000/notes/session/${sessionId}/manage/`, {
+        title: editedTitle,
+        subject: editedSubject,
         content: formattedContent,
         is_approved: true,
         tutor_notes: editedTutorNotes
@@ -110,6 +120,8 @@ const AISessionNotes = ({ sessionId }) => {
       const tutorNotes = contentParts[1]?.replace('Tutor Notes:', '').trim() || '';
       
       // Update the edited states with the response data
+      setEditedTitle(response.data.title || '');
+      setEditedSubject(response.data.subject || '');
       setEditedAINotes(aiNotes);
       setEditedTutorNotes(tutorNotes);
       
@@ -183,6 +195,36 @@ const AISessionNotes = ({ sessionId }) => {
             )}
           </Box>
         </Box>
+
+        {isEditing ? (
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              fullWidth
+              label="Title"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              variant="outlined"
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Subject"
+              value={editedSubject}
+              onChange={(e) => setEditedSubject(e.target.value)}
+              variant="outlined"
+              sx={{ mb: 2 }}
+            />
+          </Box>
+        ) : (
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h5" gutterBottom>
+              {editedTitle || 'Untitled Notes'}
+            </Typography>
+            <Typography variant="subtitle1" color="text.secondary">
+              {editedSubject || 'General'}
+            </Typography>
+          </Box>
+        )}
 
         <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 2 }}>
           <Tab label="AI Notes" />
