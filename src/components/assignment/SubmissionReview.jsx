@@ -233,7 +233,7 @@ const SubmissionReview = () => {
     
     try {
       await gradeSubmission(submissionId, {
-        score,
+        points: score,
         feedback,
         assignment_id: assignmentId
       });

@@ -601,4 +601,15 @@ export const updateGrade = async (gradeId, gradeData) => {
   }
 };
 
+// Get all assignments for the current user (student or teacher)
+export const getAssignments = async () => {
+  try {
+    const response = await api.get('/api/assignments/');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching assignments:', error);
+    throw error;
+  }
+};
+
 export default api;
