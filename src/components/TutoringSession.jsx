@@ -18,7 +18,7 @@ export function getUrlParams(url = window.location.href) {
   return result;
 }
 
-export default function TutoringSession() {
+export default function TutoringSession({ sessionId }) {
   // Get user and auth data from Redux
   const user = useSelector((state) => state.auth.user);
   const reduxUserId = useSelector((state) => state.auth.user_id);
@@ -167,19 +167,37 @@ export default function TutoringSession() {
         setMeetingNotes('**Generating Notes...**\n\nPlease wait while we analyze your session...');
         
         // Get auth token from localStorage
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         
         // Make API call with authentication headers if token exists
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
         
-        const response = await axios.post('http://localhost:8000/vidchat/analyze-transcript/', {
+        // First, analyze the transcript
+        const analysisResponse = await axios.post('http://localhost:8000/vidchat/analyze-transcript/', {
           transcript: transcriptToSend,
         }, { headers });
         
-        console.log('AI Notes response:', response.data);
+        console.log('AI Notes response:', analysisResponse.data);
         
-        if (response.data && response.data.result) {
-          setMeetingNotes(response.data.result);
+        if (analysisResponse.data && analysisResponse.data.result) {
+          // Use the sessionId prop to save notes
+          if (sessionId) {
+            // Format the AI-generated notes
+            const formattedNotes = `AI Generated Notes:\n\n${analysisResponse.data.result}\n\n---\n\nTutor Notes:\n\n`;
+            
+            // Save notes to backend with session ID
+            const notesResponse = await axios.post(`http://localhost:8000/notes/session/${sessionId}/manage/`, {
+              content: formattedNotes,
+              is_approved: false,
+              tutor_notes: null
+            }, { headers });
+            
+            console.log('Notes saved to backend:', notesResponse.data);
+            setMeetingNotes(formattedNotes);
+          } else {
+            console.warn('No session ID provided, notes not saved to backend');
+            setMeetingNotes(analysisResponse.data.result);
+          }
         } else {
           setMeetingNotes('**Note Generation Failed**\n\n* Unable to generate notes from your recording.\n* Please try again with clearer speech.');
         }

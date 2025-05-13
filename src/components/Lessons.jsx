@@ -37,12 +37,14 @@ import { fadeIn, slideIn, pulse } from '../utils/animations';
 import { useNavigate } from 'react-router-dom';
 import { fetchSessionNotes, fetchSessionAssignments, fetchTutorSessions } from '../services/api';
 import TutoringSession from './TutoringSession';
+import SessionNotes from './SessionNotes';
+import AISessionNotes from './AISessionNotes';
 
 function Lessons() {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedLesson, setSelectedLesson] = useState(null);
+  const [selectedSession, setSelectedSession] = useState(null);
   const [showNotes, setShowNotes] = useState(false);
   const [showAssignments, setShowAssignments] = useState(false);
   const [videoChatOpen, setVideoChatOpen] = useState(false);
@@ -107,24 +109,24 @@ function Lessons() {
   }, [user?.userId]);
 
   const handleLessonClick = (lesson) => {
-    setSelectedLesson(lesson);
+    setSelectedSession(lesson);
   };
 
   const handleJoinMeeting = (e, lesson) => {
     e.stopPropagation();
-    setSelectedLesson(lesson);
+    setSelectedSession(lesson);
     setVideoChatOpen(true);
   };
 
   const handleCloseVideoChat = () => {
     setVideoChatOpen(false);
-    setSelectedLesson(null);
+    setSelectedSession(null);
   };
 
   const handleViewNotes = async (lessonId) => {
     const lesson = lessons.find(l => l.id === lessonId);
     if (lesson) {
-      setSelectedLesson(lesson);
+      setSelectedSession(lesson);
       setShowNotes(true);
     }
   };
@@ -132,7 +134,7 @@ function Lessons() {
   const handleViewAssignments = async (lessonId) => {
     const lesson = lessons.find(l => l.id === lessonId);
     if (lesson) {
-      setSelectedLesson(lesson);
+      setSelectedSession(lesson);
       setShowAssignments(true);
     }
   };
@@ -247,80 +249,36 @@ function Lessons() {
   };
 
   const NotesDialog = ({ lesson, onClose }) => {
-    const [notes, setNotes] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-      const loadNotes = async () => {
-        try {
-          setLoading(true);
-          const token = localStorage.getItem('access_token');
-          const response = await fetch(`http://localhost:8000/notes/session/${lesson.id}/`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            }
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to fetch notes');
-          }
-
-          const data = await response.json();
-          setNotes(data);
-          setError(null);
-        } catch (err) {
-          console.error('Error fetching notes:', err);
-          setError(err.message || 'Unable to fetch notes. Please try again.');
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      loadNotes();
-    }, [lesson.id]);
-
     return (
-      <Dialog open onClose={onClose} maxWidth="md" fullWidth>
-        <DialogTitle>
-          Session Notes
-          <IconButton
-            aria-label="close"
-            onClick={onClose}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
+      <Dialog 
+        open 
+        onClose={onClose} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            height: '90vh',
+            maxHeight: '90vh',
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          bgcolor: 'primary.main',
+          color: 'white'
+        }}>
+          <Typography variant="h6">
+            Session Notes - {lesson.student ? `${lesson.student.first_name} ${lesson.student.last_name}` : 'Student'}
+          </Typography>
+          <IconButton onClick={onClose} sx={{ color: 'white' }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent>
-          {loading && (
-            <Box display="flex" justifyContent="center" p={3}>
-              <CircularProgress />
-            </Box>
-          )}
-          {error && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {error}
-            </Alert>
-          )}
-          {!loading && !error && !notes && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              No notes found for this session.
-            </Alert>
-          )}
-          {notes && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="body1">
-                {notes.content}
-              </Typography>
-            </Box>
-          )}
+        <DialogContent sx={{ p: 0, height: 'calc(100% - 64px)' }}>
+          <AISessionNotes sessionId={lesson.id} />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Close</Button>
-        </DialogActions>
       </Dialog>
     );
   };
@@ -627,7 +585,7 @@ function Lessons() {
       </Grid>
 
       {/* Video Chat Dialog */}
-      {selectedLesson && videoChatOpen && (
+      {selectedSession && videoChatOpen && (
         <Dialog
           open={videoChatOpen}
           onClose={handleCloseVideoChat}
@@ -650,36 +608,38 @@ function Lessons() {
             color: 'white'
           }}>
             <Typography variant="h6">
-              Tutoring Session with {selectedLesson?.student ? `${selectedLesson.student.first_name} ${selectedLesson.student.last_name}` : 'Student'}
+              Tutoring Session with {selectedSession?.student ? `${selectedSession.student.first_name} ${selectedSession.student.last_name}` : 'Student'}
             </Typography>
             <IconButton onClick={handleCloseVideoChat} sx={{ color: 'white' }}>
               <CloseIcon />
             </IconButton>
           </DialogTitle>
-          <DialogContent sx={{ p: 0, height: 'calc(100% - 64px)' }}>
-            <TutoringSession />
+          <DialogContent sx={{ p: 0, height: '80vh' }}>
+            <Box sx={{ height: '100%', position: 'relative' }}>
+              <TutoringSession sessionId={selectedSession.id} />
+            </Box>
           </DialogContent>
         </Dialog>
       )}
 
       {/* Notes Dialog */}
-      {showNotes && selectedLesson && (
+      {showNotes && selectedSession && (
         <NotesDialog 
-          lesson={selectedLesson} 
+          lesson={selectedSession} 
           onClose={() => {
             setShowNotes(false);
-            setSelectedLesson(null);
+            setSelectedSession(null);
           }} 
         />
       )}
       
       {/* Assignments Dialog */}
-      {showAssignments && selectedLesson && (
+      {showAssignments && selectedSession && (
         <AssignmentsDialog 
-          lesson={selectedLesson} 
+          lesson={selectedSession} 
           onClose={() => {
             setShowAssignments(false);
-            setSelectedLesson(null);
+            setSelectedSession(null);
           }} 
         />
       )}
