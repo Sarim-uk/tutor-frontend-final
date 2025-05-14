@@ -139,7 +139,7 @@ function SessionCard({ session, index }) {
                 color="secondary" 
                 size="small"
                 onClick={handleViewAnalytics}
-                title="View Session Analytics"
+                title=" Session Analytics"
                 sx={{
                   backgroundColor: 'rgba(156, 39, 176, 0.1)',
                   '&:hover': {

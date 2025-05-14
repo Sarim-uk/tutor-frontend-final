@@ -529,7 +529,7 @@ function Dashboard() {
                       
                       <Divider sx={{ my: 1.5 }} />
                       
-                      <Button
+                      {/* <Button
                         variant="contained"
                         startIcon={<VideoCallIcon />}
                         fullWidth
@@ -540,7 +540,7 @@ function Dashboard() {
                         }}
                       >
                         {isToday(new Date(session.scheduled_time)) ? 'Join Session' : 'View Details'}
-                      </Button>
+                      </Button> */}
                     </CardContent>
                   </Card>
                 </Grid>
