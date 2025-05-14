@@ -5,16 +5,19 @@ import {
   AccessTime as TimeIcon,
   VideoCall as VideoIcon,
   Event as EventIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  Analytics as AnalyticsIcon
 } from '@mui/icons-material';
 import { fadeIn, pulse } from '../../utils/animations';
 import VideoChat from '../VideoChat';
+import { useNavigate } from 'react-router-dom';
 
 function SessionCard({ session, index }) {
   const [studentName, setStudentName] = useState('');
   const [studentAvatar, setStudentAvatar] = useState('');
   const [studentData, setStudentData] = useState(null);
   const [videoChatOpen, setVideoChatOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStudentDetails = async () => {
@@ -61,6 +64,10 @@ function SessionCard({ session, index }) {
 
   const handleCloseVideoChat = () => {
     setVideoChatOpen(false);
+  };
+  
+  const handleViewAnalytics = () => {
+    navigate(`/session-analytics/${session.room_id || session.id}`);
   };
 
   return (
@@ -128,6 +135,20 @@ function SessionCard({ session, index }) {
               >
                 <VideoIcon />
               </IconButton>
+              <IconButton 
+                color="secondary" 
+                size="small"
+                onClick={handleViewAnalytics}
+                title="View Session Analytics"
+                sx={{
+                  backgroundColor: 'rgba(156, 39, 176, 0.1)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(156, 39, 176, 0.2)',
+                  }
+                }}
+              >
+                <AnalyticsIcon />
+              </IconButton>
               <IconButton color="primary" size="small">
                 <EventIcon />
               </IconButton>
@@ -162,35 +183,32 @@ function SessionCard({ session, index }) {
             {formattedDate}
           </Typography>
 
-          {isToday && (
-            <Box mt={2} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Chip 
-                label="Today's Session" 
-                color="primary" 
-                size="small" 
+          <Box mt={2} sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+            <Button
+              variant="contained"
+              color="secondary"
+              size="small"
+              startIcon={<AnalyticsIcon />}
+              onClick={handleViewAnalytics}
+              sx={{ boxShadow: 3 }}
+            >
+              Analytics
+            </Button>
+            {/* {isToday && isSessionActive && (
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<VideoIcon />}
+                onClick={handleJoinVideoChat}
                 sx={{ 
-                  borderRadius: 1,
                   animation: `${pulse} 2s infinite`,
-                  fontWeight: 'bold'
+                  boxShadow: 3
                 }}
-              />
-              
-              {isSessionActive && (
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<VideoIcon />}
-                  onClick={handleJoinVideoChat}
-                  sx={{ 
-                    animation: `${pulse} 2s infinite`,
-                    boxShadow: 3
-                  }}
-                >
-                  Join Now
-                </Button>
-              )}
-            </Box>
-          )}
+              >
+                Join Now
+              </Button>
+            )} */}
+          </Box>
         </CardContent>
       </Card>
 

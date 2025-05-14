@@ -30,6 +30,7 @@ import {
   CalendarToday as CalendarIcon,
   AccessTime as TimeIcon,
   Close as CloseIcon,
+  Analytics as AnalyticsIcon,
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { format } from 'date-fns';
@@ -39,6 +40,7 @@ import { fetchSessionNotes, fetchSessionAssignments, fetchTutorSessions } from '
 import TutoringSession from './TutoringSession';
 import SessionNotes from './SessionNotes';
 import AISessionNotes from './AISessionNotes';
+import EmotionAnalyticsDashboard from '../components/analytics/EmotionAnalyticsDashboard';
 
 function Lessons() {
   const [lessons, setLessons] = useState([]);
@@ -48,6 +50,8 @@ function Lessons() {
   const [showNotes, setShowNotes] = useState(false);
   const [showAssignments, setShowAssignments] = useState(false);
   const [videoChatOpen, setVideoChatOpen] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [analyticsSessionId, setAnalyticsSessionId] = useState(null);
   const user = useSelector(state => state.auth.user);
   const navigate = useNavigate();
 
@@ -137,6 +141,11 @@ function Lessons() {
       setSelectedSession(lesson);
       setShowAssignments(true);
     }
+  };
+
+  const handleViewAnalytics = (lesson) => {
+    setAnalyticsSessionId(lesson.room_id || lesson.id);
+    setShowAnalytics(true);
   };
 
   const LessonDialog = ({ lesson, onClose }) => {
@@ -576,6 +585,24 @@ function Lessons() {
                           <AssignmentIcon />
                         </IconButton>
                       </Tooltip>
+                      <Tooltip title="View Analytics">
+                        <IconButton 
+                          color="secondary" 
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewAnalytics(lesson);
+                          }}
+                          sx={{ 
+                            '&:hover': { 
+                              bgcolor: 'secondary.light',
+                              transform: 'scale(1.1)'
+                            }
+                          }}
+                        >
+                          <AnalyticsIcon />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                   </CardContent>
                 </Card>
@@ -643,6 +670,29 @@ function Lessons() {
           }} 
         />
       )}
+
+      {/* Analytics Dialog */}
+      <Dialog
+        open={showAnalytics}
+        onClose={() => setShowAnalytics(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ sx: { minHeight: 500 } }}
+      >
+        <DialogTitle sx={{ bgcolor: 'secondary.main', color: 'white' }}>
+          Session Analytics
+        </DialogTitle>
+        <DialogContent dividers>
+          {analyticsSessionId && (
+            <EmotionAnalyticsDashboard sessionId={analyticsSessionId} />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowAnalytics(false)} color="secondary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

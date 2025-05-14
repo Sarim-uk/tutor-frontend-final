@@ -108,7 +108,7 @@ const StudentDashboard = () => {
           />
           <Tab 
             icon={<NotesIcon />} 
-            label="View Notes" 
+            label="View Note" 
             id="student-tab-3"
             aria-controls="student-tabpanel-3"
           />

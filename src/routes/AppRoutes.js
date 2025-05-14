@@ -7,6 +7,7 @@ import Profile from '../components/Profile';
 import Students from '../components/Students';
 import NotFound from '../components/NotFound';
 import StudentPerformanceAssessment from '../pages/StudentPerformanceAssessment';
+import SessionAnalytics from '../pages/SessionAnalytics';
 
 function AppRoutes() {
   return (
@@ -50,6 +51,15 @@ function AppRoutes() {
         element={
           <PrivateRoute>
             <StudentPerformanceAssessment />
+          </PrivateRoute>
+        }
+      />
+      
+      <Route
+        path="/session-analytics/:sessionId"
+        element={
+          <PrivateRoute>
+            <SessionAnalytics />
           </PrivateRoute>
         }
       />
