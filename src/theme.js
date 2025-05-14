@@ -5,6 +5,7 @@ const theme = createTheme({
     primary: {
       main: '#052453', // Navy blue
       light: '#2c4c7c',
+      lighter: '#e6edf7', // Very light blue for backgrounds
       dark: '#031a3d',
       contrastText: '#ffffff',
     },

@@ -48,7 +48,8 @@ import {
   AccessTime as AccessTimeIcon,
   DateRange as DateRangeIcon,
   People as PeopleIcon,
-  Assignment as AssignmentIcon
+  Assignment as AssignmentIcon,
+  CalendarMonth as AvailabilityIcon
 } from '@mui/icons-material';
 import Students from './Students'; // Import the Students component
 import './styles/Dashboard.css';
@@ -72,6 +73,7 @@ import NoteCard from './cards/NoteCard';
 import Profile from './Profile';
 import Lessons from './Lessons';
 import AssignmentDashboard from './assignment/AssignmentDashboard'; // Import AssignmentDashboard
+import AvailabilityManagement from './AvailabilityManagement'; // Import the AvailabilityManagement component
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { checkDashboardEndpoint } from '../utils/apiHealthCheck';
@@ -176,11 +178,20 @@ function Dashboard() {
     fetchAllData();
   }, [user]);
 
+  // Handle navigation for performance view
+  useEffect(() => {
+    if (view === 'performance') {
+      navigate('/student-performance');
+    }
+  }, [view, navigate]);
+
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, view: 'dashboard' },
     { text: 'Lessons', icon: <SchoolIcon />, view: 'lessons' },
     { text: 'Assignments', icon: <AssignmentsIcon />, view: 'assignments' },
     { text: 'Students', icon: <StudentsIcon />, view: 'students' },
+    { text: 'Performance', icon: <TimelineIcon />, view: 'performance' },
+    { text: 'Availability', icon: <AvailabilityIcon />, view: 'availability' },
     { text: 'Profile', icon: <ProfileIcon />, view: 'profile' }
   ];
   console.log("talha is here");
@@ -294,6 +305,22 @@ function Dashboard() {
       </Box>
     );
   }
+
+  // Don't render performance in the main content area since we're navigating away
+  const renderContent = () => {
+    if (view === 'performance') return null;
+    
+    return (
+      <>
+        {view === 'dashboard' && renderDashboardContent()}
+        {view === 'lessons' && <Lessons />}
+        {view === 'assignments' && <AssignmentDashboard />}
+        {view === 'students' && <Students />}
+        {view === 'profile' && <Profile />}
+        {view === 'availability' && <AvailabilityManagement />}
+      </>
+    );
+  };
 
   // Render the main dashboard content
   const renderDashboardContent = () => {
@@ -775,11 +802,7 @@ function Dashboard() {
           </Alert>
         )}
 
-        {view === 'dashboard' && renderDashboardContent()}
-        {view === 'lessons' && <Lessons />}
-        {view === 'assignments' && <AssignmentDashboard />}
-        {view === 'students' && <Students />}
-        {view === 'profile' && <Profile />}
+        {renderContent()}
 
         {error && error.includes('404') && (
           <Box sx={{ p: 3 }}>

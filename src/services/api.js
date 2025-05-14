@@ -10,7 +10,7 @@ const api = axios.create({
     'Content-Type': 'application/json'
   },
   // Add a timeout to prevent hanging requests
-  timeout: 15000 // Increased timeout for better reliability
+  timeout: 30000 // Increased timeout for better reliability
 });
 
 // Session management functions
@@ -597,6 +597,120 @@ export const updateGrade = async (gradeId, gradeData) => {
     return response.data;
   } catch (error) {
     console.error(`Error updating grade ${gradeId}:`, error);
+    throw error;
+  }
+};
+
+// Create student progress record
+export const createStudentProgress = async (progressData) => {
+  try {
+    const response = await api.post('/progress/', progressData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating student progress:', error);
+    throw error;
+  }
+};
+
+// Update student progress record
+export const updateStudentProgress = async (progressId, progressData) => {
+  try {
+    const response = await api.put(`/progress/${progressId}/`, progressData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating progress ${progressId}:`, error);
+    throw error;
+  }
+};
+
+// Get detailed student performance data
+export const getStudentPerformance = async (studentId) => {
+  try {
+    const response = await api.get(`/students/${studentId}/performance/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching student performance:', error);
+    throw error;
+  }
+};
+
+// Tutor Availability Management API functions
+export const fetchTutorAvailability = async (tutorId) => {
+  try {
+    console.log(`Fetching tutor availability for ID: ${tutorId}`);
+    
+    // Add retry logic
+    let retries = 3;
+    let response;
+    
+    while (retries > 0) {
+      try {
+        response = await api.get(`/tutors/${tutorId}/availability/`);
+        break; // Success, exit the retry loop
+      } catch (err) {
+        if (retries === 1 || (err.response && err.response.status !== 500 && err.response.status !== 502)) {
+          // On last retry or if the error is not one we should retry on, throw the error
+          throw err;
+        }
+        retries--;
+        // Wait before retrying (with exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, (4 - retries) * 1000));
+      }
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching tutor availability:', error);
+    throw error;
+  }
+};
+
+export const addTutorAvailabilitySlot = async (tutorId, slotData) => {
+  try {
+    // Add retry logic
+    let retries = 3;
+    let response;
+    
+    while (retries > 0) {
+      try {
+        response = await api.post(`/tutors/${tutorId}/availability/`, slotData);
+        break; // Success, exit the retry loop
+      } catch (err) {
+        if (retries === 1 || (err.response && err.response.status !== 500 && err.response.status !== 502)) {
+          // On last retry or if the error is not one we should retry on, throw the error
+          throw err;
+        }
+        retries--;
+        // Wait before retrying (with exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, (4 - retries) * 1000));
+      }
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error adding tutor availability slot:', error);
+    throw error;
+  }
+};
+
+export const updateTutorAvailabilitySlot = async (tutorId, slotId, slotData) => {
+  try {
+    // For updating a slot, we use the direct availability endpoint
+    const response = await api.put(`/availability/${slotId}/`, slotData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating tutor availability slot:', error);
+    throw error;
+  }
+};
+
+export const deleteTutorAvailabilitySlot = async (tutorId, slotId) => {
+  try {
+    // For deleting a slot, we use the direct availability endpoint
+    const response = await api.delete(`/availability/${slotId}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting tutor availability slot:', error);
     throw error;
   }
 };

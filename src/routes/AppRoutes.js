@@ -6,6 +6,7 @@ import PrivateRoute from './PrivateRoute';
 import Profile from '../components/Profile';
 import Students from '../components/Students';
 import NotFound from '../components/NotFound';
+import StudentPerformanceAssessment from '../pages/StudentPerformanceAssessment';
 
 function AppRoutes() {
   return (
@@ -40,6 +41,15 @@ function AppRoutes() {
         element={
           <PrivateRoute>
             <Students />
+          </PrivateRoute>
+        }
+      />
+      
+      <Route
+        path="/student-performance"
+        element={
+          <PrivateRoute>
+            <StudentPerformanceAssessment />
           </PrivateRoute>
         }
       />
