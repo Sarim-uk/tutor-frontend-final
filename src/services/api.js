@@ -601,6 +601,7 @@ export const updateGrade = async (gradeId, gradeData) => {
   }
 };
 
+<<<<<<< HEAD
 // Create student progress record
 export const createStudentProgress = async (progressData) => {
   try {
@@ -711,6 +712,15 @@ export const deleteTutorAvailabilitySlot = async (tutorId, slotId) => {
     return response.data;
   } catch (error) {
     console.error('Error deleting tutor availability slot:', error);
+=======
+// Get all assignments for the current user (student or teacher)
+export const getAssignments = async () => {
+  try {
+    const response = await api.get('/api/assignments/');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching assignments:', error);
+>>>>>>> 4448c9df8a305a81a56d6e814b2687238f272e54
     throw error;
   }
 };

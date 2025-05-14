@@ -16,58 +16,16 @@ import {
   AssignmentTurnedIn as AssignmentIcon,
   Schedule as ScheduleIcon,
   Upload as UploadIcon,
-  CheckCircle as CompletedIcon
+  Grade as GradeIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { useAuth } from '../../contexts/AuthContext';
-
-// This will be replaced with actual API call
-const fetchStudentAssignments = async () => {
-  // Simulated API response for development
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        {
-          id: '1',
-          title: 'Math Problem Set',
-          description: 'Complete problems 1-10 on page 35 of the textbook.',
-          due_date: new Date(Date.now() + 86400000 * 3), // 3 days from now
-          status: 'Pending',
-          max_score: 100
-        },
-        {
-          id: '2',
-          title: 'Science Lab Report',
-          description: 'Write a report on the latest lab experiment.',
-          due_date: new Date(Date.now() + 86400000 * 7), // 7 days from now
-          status: 'Pending',
-          max_score: 50
-        },
-        {
-          id: '3',
-          title: 'English Essay',
-          description: 'Write a 500-word essay on the given topic.',
-          due_date: new Date(Date.now() - 86400000 * 1), // 1 day ago
-          status: 'Pending',
-          max_score: 100
-        },
-        {
-          id: '4',
-          title: 'History Research',
-          description: 'Research a historical event and submit a summary.',
-          due_date: new Date(Date.now() + 86400000 * 14), // 14 days from now
-          status: 'Completed',
-          max_score: 100,
-          score: 85
-        }
-      ]);
-    }, 1000);
-  });
-};
+import { getAssignments } from '../../services/api';
 
 const AssignmentCard = ({ assignment }) => {
   const isPastDue = new Date(assignment.due_date) < new Date();
-  const isCompleted = assignment.status === 'Completed';
+  const isGraded = assignment.status === 'Graded' || assignment.feedback_received;
+  const isSubmitted = assignment.submitted || assignment.status === 'Submitted' || assignment.status === 'Late';
   
   return (
     <Card 
@@ -80,7 +38,7 @@ const AssignmentCard = ({ assignment }) => {
           transform: 'translateY(-4px)',
           boxShadow: 4
         },
-        borderLeft: isCompleted ? '5px solid #4caf50' : isPastDue ? '5px solid #f44336' : '5px solid #2196f3'
+        borderLeft: isGraded ? '5px solid #4caf50' : isPastDue ? '5px solid #f44336' : '5px solid #2196f3'
       }}
     >
       <CardContent sx={{ flexGrow: 1 }}>
@@ -88,11 +46,18 @@ const AssignmentCard = ({ assignment }) => {
           <Typography variant="h6" component="div">
             {assignment.title}
           </Typography>
-          {isCompleted ? (
+          {isGraded ? (
             <Chip 
-              icon={<CompletedIcon />} 
-              label="Completed" 
+              icon={<GradeIcon />} 
+              label="Graded" 
               color="success" 
+              size="small" 
+            />
+          ) : isSubmitted ? (
+            <Chip 
+              icon={<AssignmentIcon />} 
+              label="Submitted" 
+              color="primary" 
               size="small" 
             />
           ) : isPastDue ? (
@@ -120,12 +85,18 @@ const AssignmentCard = ({ assignment }) => {
           {assignment.description}
         </Typography>
         
-        {isCompleted && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2">
-              <strong>Score:</strong> {assignment.score}/{assignment.max_score} 
-              ({Math.round((assignment.score / assignment.max_score) * 100)}%)
+        {isGraded && (
+          <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+            <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <GradeIcon fontSize="small" color="primary" />
+              <strong>Grade:</strong> {assignment.score || 0}/{assignment.max_score} 
+              ({Math.round(((assignment.score || 0) / assignment.max_score) * 100)}%)
             </Typography>
+            {assignment.feedback && (
+              <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+                <strong>Feedback:</strong> {assignment.feedback}
+              </Typography>
+            )}
           </Box>
         )}
       </CardContent>
@@ -135,12 +106,12 @@ const AssignmentCard = ({ assignment }) => {
       <CardActions>
         <Button 
           variant="contained" 
-          startIcon={isCompleted ? <AssignmentIcon /> : <UploadIcon />}
-          color={isCompleted ? "secondary" : "primary"}
+          startIcon={isSubmitted ? <AssignmentIcon /> : <UploadIcon />}
+          color={isSubmitted ? "secondary" : "primary"}
           size="small"
           fullWidth
         >
-          {isCompleted ? "View Submission" : "Submit Assignment"}
+          {isSubmitted ? "View Submission" : "Submit Assignment"}
         </Button>
       </CardActions>
     </Card>
@@ -154,10 +125,26 @@ const StudentAssignments = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const getAssignments = async () => {
+    const fetchAssignments = async () => {
       try {
-        const data = await fetchStudentAssignments();
-        setAssignments(data);
+        const response = await getAssignments();
+        // Transform the response data to include grade information
+        const transformedAssignments = response.data.map(assignment => {
+          // Check if there's a submission with a grade
+          const submission = assignment.submissions?.find(sub => sub.student === user.id);
+          const grade = submission?.grade_info;
+          
+          return {
+            ...assignment,
+            status: grade ? 'Graded' : assignment.status,
+            feedback_received: !!grade,
+            score: grade?.points || 0,
+            max_score: assignment.max_score || 100,
+            feedback: grade?.feedback || null
+          };
+        });
+        
+        setAssignments(transformedAssignments);
       } catch (err) {
         console.error('Error fetching assignments:', err);
         setError('Failed to load assignments. Please try again.');
@@ -166,8 +153,8 @@ const StudentAssignments = () => {
       }
     };
 
-    getAssignments();
-  }, []);
+    fetchAssignments();
+  }, [user.id]);
 
   if (loading) {
     return (
@@ -194,8 +181,8 @@ const StudentAssignments = () => {
   }
 
   // Group assignments
-  const pendingAssignments = assignments.filter(a => a.status !== 'Completed');
-  const completedAssignments = assignments.filter(a => a.status === 'Completed');
+  const pendingAssignments = assignments.filter(a => !a.feedback_received && !a.status?.includes('Graded'));
+  const gradedAssignments = assignments.filter(a => a.feedback_received || a.status?.includes('Graded'));
 
   return (
     <Box>
@@ -218,13 +205,13 @@ const StudentAssignments = () => {
         </>
       )}
       
-      {completedAssignments.length > 0 && (
+      {gradedAssignments.length > 0 && (
         <>
           <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
-            Completed Assignments
+            Graded Assignments
           </Typography>
           <Grid container spacing={3}>
-            {completedAssignments.map((assignment) => (
+            {gradedAssignments.map((assignment) => (
               <Grid item xs={12} sm={6} md={4} key={assignment.id}>
                 <AssignmentCard assignment={assignment} />
               </Grid>
